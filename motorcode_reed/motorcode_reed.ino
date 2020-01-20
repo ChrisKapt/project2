@@ -1,5 +1,6 @@
 #include <Motor.h>
 #include <Wire.h>
+#define buzz 2
 #define motorRF 3
 #define motorRB 4
 #define motorLF 5
@@ -10,6 +11,7 @@
 #define echoPinR 10
 #define trigPinL 11
 #define echoPinL 12
+#define reed 13
 #define IrR A1
 #define IrL A2
 #define IrV A3
@@ -39,6 +41,12 @@ Wire.onReceive(receiveEvents);
 Wire.onRequest(requestEvents);
 Serial.begin(9600);
 
+//buzzer
+pinMode (buzz, OUTPUT);
+
+//reed sensor
+pinMode (reed, INPUT);
+
 //ir sensor 
 pinMode (IrR, INPUT);
 pinMode (IrL, INPUT);
@@ -60,6 +68,7 @@ pinMode(echoPinL, INPUT);
 }
 void loop() {
    unsigned long startMillis = millis();
+   int reedValue = digitalRead(reed);
    if (aan == 1){                             //wanneer 1 wordt de automatische stand gestart
     drive();      
    }
@@ -67,6 +76,20 @@ void loop() {
    }
    //Serial.println(aan);
     delay(1);
+    Serial.println(reedValue);
+   if (reedValue == LOW){
+    motor.stop();
+    aan = 0;
+    digitalWrite(buzz, HIGH);
+    delay(100);
+    digitalWrite(buzz, LOW);
+    digitalWrite(buzz, HIGH);
+    delay(100);
+    digitalWrite(buzz, LOW);
+    digitalWrite(buzz, HIGH);
+    delay(100);
+    digitalWrite(buzz, LOW);
+   }
 }
 void drive(){
      motor.forward();                         //vooruit rij funtie
@@ -85,7 +108,7 @@ void draai90(){
     motor.reverse();
     delay(750);
     motor.leftActive(true);
-    delay(1200);
+    delay(1375);
     motor.forward();
     previousMillis = startMillis;
       if (statusSensorV == 1 && startMillis - previousMillis2 <= 5000){   //als er binnen 5s weer een zwarte lijn/niks is wordt er een 180 draai achteraan gedaan, na 5s gaat de robot weer naar de loop
@@ -193,7 +216,7 @@ void readusL(){                          //functie als linker us waarde kleiner 
 }
 void receiveEvents(int x) {               //waardes via die esp binnen komen en doorkomen naar arduino (i2c)
   int input = Wire.read();
-  Serial.println(input);
+  //Serial.println(input);
     if (input == 0){                      //stopt alle motor
       motor.stop();
     }
